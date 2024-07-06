@@ -54,6 +54,17 @@ class Blockfrost implements Provider {
     return getAddressUtxos(this.blockfrost, address, this.limit, 1, !!paginate);
   }
 
+  async getConfirmations(txHash: string) {
+    const [tx, latestBlock] = await Promise.all([
+      fetchWithFallback(() => this.blockfrost.txs(txHash), null),
+      fetchWithFallback(() => this.blockfrost.blocksLatest(), null),
+    ]);
+    invariant(tx, `Transaction with hash ${txHash} not found`);
+    invariant(latestBlock, "Latest block information not found");
+
+    return latestBlock.height ? latestBlock.height - tx.block_height + 1 : 0;
+  }
+
   async getAssetAddresses(assetId: string) {
     return paginate(
       (page) => this.blockfrost.assetsAddresses(assetId, { page }),
