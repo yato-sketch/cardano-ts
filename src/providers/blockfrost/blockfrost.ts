@@ -71,11 +71,11 @@ class Blockfrost implements Provider {
     return height - tx.block_height + 1;
   }
 
-  async getAssetAddresses(assetId: string) {
+  async getAssetAddresses(assetId: string, parallel?: number) {
     return paginate(
       (page) => this.blockfrost.assetsAddresses(assetId, { page }),
       this.limit,
-      this.parallel
+      parallel && parallel > 0 ? parallel : this.parallel
     );
   }
 
