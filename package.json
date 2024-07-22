@@ -1,6 +1,6 @@
 {
   "name": "cardano-ts",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Node.js library for working with the Cardano blockchain",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
