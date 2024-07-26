@@ -2,7 +2,6 @@ import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
 import { components } from "@blockfrost/openapi";
 import { UTxO } from "@lucid-evolution/lucid";
 import { LimitFunction } from "p-limit";
-import paginate from "./paginate.js";
 import { fetchWithFallback } from "./utils.js";
 
 type ElementType<T> = T extends (infer U)[] ? U : never;
@@ -13,21 +12,32 @@ type BlockfrostUtxo = ElementType<
 const getAddressUtxos = async (
   blockfrost: BlockFrostAPI,
   address: string,
-  limit: LimitFunction,
-  parallel: number,
-  shouldPaginate: boolean
-): Promise<UTxO[]> => {
-  const utxos = shouldPaginate
-    ? await paginate(
-        (page) => blockfrost.addressesUtxos(address, { page }),
-        limit,
-        parallel
-      )
-    : await fetchWithFallback(() => blockfrost.addressesUtxos(address), []);
-
-  return await Promise.all(
-    utxos.map((utxo) => toUtxo(utxo, blockfrost, limit))
+  limit: LimitFunction
+): Promise<UTxO[]> =>
+  await Promise.all(
+    (
+      await queryUtxos(blockfrost, address, limit)
+    ).map((utxo) => toUtxo(utxo, blockfrost, limit))
   );
+
+const queryUtxos = async (
+  blockfrost: BlockFrostAPI,
+  address: string,
+  limit: LimitFunction
+) => {
+  type BlockfrostUtxo = Awaited<
+    ReturnType<typeof blockfrost.addressesUtxos>
+  >[number];
+  const utxos: BlockfrostUtxo[] = [];
+
+  for (let page = 1; ; page++) {
+    const result = await fetchWithFallback(
+      () => limit(() => blockfrost.addressesUtxos(address, { page })),
+      []
+    );
+    utxos.push(...result);
+    if (result.length < 100) return utxos;
+  }
 };
 
 const toUtxo = async (
