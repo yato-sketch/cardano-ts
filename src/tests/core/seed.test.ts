@@ -2,7 +2,6 @@ import { test, expect, describe } from "vitest";
 import { Seed } from "../../core/seed";
 
 describe("Seed Tests", () => {
-  // Using a valid 12-word mnemonic
   const testPhrase = "neck trend supply announce because claw fiscal chimney initial popular flock congress drip mobile gun caution enjoy rely loud thing cruel devote demise garlic";
   const differentPhrase = "exit brisk private front neither gravity clay apple oxygen core royal sport voyage index tide feature public abuse suggest fog foot cabbage exact proud";
 

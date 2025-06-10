@@ -3,7 +3,6 @@ import { Wallet } from "../../core/wallet";
 import { Blockfrost } from "../../providers/blockfrost/blockfrost";
 
 describe("Wallet Tests", () => {
-  // Using preview network test data
   const testAddress = "addr_test1qrs5c09t4gmeyluma5p4pj8gy6vuz0vc3wmcrqawldtpqwyqlm5t90unu8ccfhshhcn95384cpn63vftkxdlr7fqed9qm5vgc0";
   const testStakeAddress = "stake_test1uzq0a69jh7f7ruvymctmufj6gn6uqeagky4mrxl3lysvkjsk40lhj";
   const projectId = process.env.BLOCKFROST_PREVIEW_PROJECT_ID || "test_project_id";

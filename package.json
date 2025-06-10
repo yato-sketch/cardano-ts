@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "engines": {
-    "node": ">=18.18 <=21"
+    "node": ">=20.0.0"
   },
   "type": "module",
   "files": [
@@ -37,22 +37,22 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.1.0",
     "@supertape/formatter-tap": "^3.0.3",
-    "@types/node": "^22.5.4",
+    "@types/node": "^20.11.24",
     "@types/tape": "^5.6.4",
-    "@typescript-eslint/eslint-plugin": "^6.7.5",
-    "@typescript-eslint/parser": "^6.7.5",
-    "@vitest/expect": "^3.2.3",
-    "concurrently": "^8.2.0",
-    "dotenv": "^16.5.0",
-    "eslint": "^8.51.0",
-    "eslint-config-prettier": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "@vitest/expect": "^1.3.0",
+    "concurrently": "^8.2.2",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-node": "^0.3.9",
-    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-import": "^2.29.1",
     "faucet": "^0.0.4",
-    "prettier": "^2.8.8",
+    "prettier": "^3.2.5",
     "supertape": "^10.7.3",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3",
     "vitest": "^3.2.3"
   }
 }

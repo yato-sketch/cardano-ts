@@ -49,5 +49,4 @@ function createAddressTests(network: Network) {
   });
 }
 
-// Run tests for each network
 Object.keys(testData).forEach((network) => createAddressTests(network as Network)); 

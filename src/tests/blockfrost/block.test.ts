@@ -73,5 +73,4 @@ function createBlockTests(network: Network) {
   });
 }
 
-// Run tests for each network
 Object.keys(testData).forEach((network) => createBlockTests(network as Network)); 

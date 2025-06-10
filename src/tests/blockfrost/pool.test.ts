@@ -102,5 +102,4 @@ function createPoolTests(network: Network) {
   });
 }
 
-// Run tests for each network
 Object.keys(testData).forEach((network) => createPoolTests(network as Network)); 

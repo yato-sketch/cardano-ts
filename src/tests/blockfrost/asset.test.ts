@@ -83,5 +83,4 @@ function createAssetTests(network: Network) {
   });
 }
 
-// Run tests for each network
 Object.keys(testData).forEach((network) => createAssetTests(network as Network)); 
