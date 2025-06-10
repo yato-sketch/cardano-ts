@@ -1,6 +1,11 @@
-# Cardano TypeScript SDK
+# Cardano TypeScript Library
 
-A TypeScript SDK for interacting with the Cardano blockchain, providing a clean and type-safe interface for common operations.
+A Node.js library for working with the Cardano blockchain.
+
+## Requirements
+
+- Node.js >= 20.0.0
+- npm >= 10.0.0
 
 ## Features
 
@@ -14,48 +19,47 @@ A TypeScript SDK for interacting with the Cardano blockchain, providing a clean 
 ## Installation
 
 ```bash
-npm install @cardano-ts/node
+npm install cardano-ts
 ```
 
 ## Usage
 
 ```typescript
-import { Blockfrost } from "@cardano-ts/node";
-import { Wallet } from "@cardano-ts/node";
+import { Wallet, Blockfrost } from 'cardano-ts';
 
-// Initialize provider with preview network
-const blockfrost = new Blockfrost("YOUR_BLOCKFROST_API_KEY", "preview");
+// Create a provider
+const provider = new Blockfrost('YOUR_PROJECT_ID', 'preview');
 
-// Create wallet from seed phrase
-const wallet = await Wallet.fromSeed(
-  blockfrost,
-  "your seed phrase here"
-);
+// Create a wallet
+const wallet = new Wallet(provider, 'YOUR_ADDRESS');
 
-// Get wallet UTXOs
-console.log(wallet.utxos);
+// Get wallet balance
+const balance = await wallet.getBalance();
+console.log(`Wallet balance: ${balance} lovelace`);
 
-// Get account UTXOs
-const utxos = await getAccountUtxos(blockfrost, {
-  bech32: "stake_test1...",
-  network: "preview"
-});
+// Get wallet assets
+const assets = await wallet.getAssets();
+console.log('Wallet assets:', assets);
 
-// Find token by asset ID
-const tokenAddress = await blockfrost.findToken("asset_id_here");
+// Check if wallet has enough balance
+const hasEnough = await wallet.hasBalance(1000000n); // 1 ADA
+console.log('Has enough balance:', hasEnough);
 
-// Get token history
-const history = await blockfrost.getTokenHistory("asset_id_here", 100);
+// Get asset balance
+const assetId = 'YOUR_ASSET_ID';
+const assetBalance = await wallet.getAssetBalance(assetId);
+console.log(`Asset balance: ${assetBalance}`);
 
-// Get transaction metadata
-const metadata = await blockfrost.getMetadata("tx_hash_here");
+// Get asset history
+const history = await wallet.getAssetHistory(assetId, 10);
+console.log('Asset history:', history);
 ```
 
-## Development Setup
+## Development
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/cardano-ts.git
+git clone https://github.com/MynthAI/cardano-ts.git
 cd cardano-ts
 ```
 
@@ -67,12 +71,31 @@ npm install
 3. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your Blockfrost API key
+# Edit .env with your Blockfrost API keys
 ```
 
 4. Run tests:
 ```bash
 npm test
+```
+
+5. Build the library:
+```bash
+npm run build
+```
+
+## Testing
+
+The library uses Vitest for testing. Tests are located in the `src/tests` directory.
+
+To run tests:
+```bash
+npm test
+```
+
+To run tests in watch mode:
+```bash
+npm run test:watch
 ```
 
 ## Recent Changes

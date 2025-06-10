@@ -9,11 +9,12 @@ const BLOCKFROST_PREVIEW_PROJECT_ID = process.env.BLOCKFROST_PREVIEW_PROJECT_ID;
 
 function createAddressTests(network: Network) {
   const data = testData[network];
-  const projectId = network === "mainnet" 
-    ? BLOCKFROST_PROJECT_ID 
-    : network === "preprod" 
-      ? BLOCKFROST_PREPROD_PROJECT_ID 
-      : BLOCKFROST_PREVIEW_PROJECT_ID;
+  const projectId =
+    network === "mainnet"
+      ? BLOCKFROST_PROJECT_ID
+      : network === "preprod"
+        ? BLOCKFROST_PREPROD_PROJECT_ID
+        : BLOCKFROST_PREVIEW_PROJECT_ID;
 
   if (!projectId) {
     console.warn(`Skipping ${network} tests: Missing project ID`);
@@ -38,8 +39,15 @@ function createAddressTests(network: Network) {
         const addresses = await provider.getStakedAddresses(data.stakeAddress);
         expect(addresses.length).toBeGreaterThan(0);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
-          console.warn(`Test stake address not found on ${network}, skipping test`);
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
+          console.warn(
+            `Test stake address not found on ${network}, skipping test`
+          );
           return;
         }
 
@@ -49,4 +57,6 @@ function createAddressTests(network: Network) {
   });
 }
 
-Object.keys(testData).forEach((network) => createAddressTests(network as Network)); 
+Object.keys(testData).forEach((network) =>
+  createAddressTests(network as Network)
+);

@@ -9,11 +9,12 @@ const BLOCKFROST_PREVIEW_PROJECT_ID = process.env.BLOCKFROST_PREVIEW_PROJECT_ID;
 
 function createAssetTests(network: Network) {
   const data = testData[network];
-  const projectId = network === "mainnet" 
-    ? BLOCKFROST_PROJECT_ID 
-    : network === "preprod" 
-      ? BLOCKFROST_PREPROD_PROJECT_ID 
-      : BLOCKFROST_PREVIEW_PROJECT_ID;
+  const projectId =
+    network === "mainnet"
+      ? BLOCKFROST_PROJECT_ID
+      : network === "preprod"
+        ? BLOCKFROST_PREPROD_PROJECT_ID
+        : BLOCKFROST_PREVIEW_PROJECT_ID;
 
   if (!projectId) {
     console.warn(`Skipping ${network} tests: Missing project ID`);
@@ -27,9 +28,16 @@ function createAssetTests(network: Network) {
       try {
         const address = await provider.findToken(data.assetId);
         expect(address).toBeDefined();
-        expect(address.startsWith(network === "mainnet" ? "addr1" : "addr_test")).toBe(true);
+        expect(
+          address.startsWith(network === "mainnet" ? "addr1" : "addr_test")
+        ).toBe(true);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
           console.warn(`Test asset not found on ${network}, skipping test`);
           return;
         }
@@ -43,7 +51,12 @@ function createAssetTests(network: Network) {
         const tokens = await provider.findAllTokens(data.assetId.slice(0, 56));
         expect(tokens.length).toBeGreaterThan(0);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
           console.warn(`Test policy not found on ${network}, skipping test`);
           return;
         }
@@ -57,7 +70,12 @@ function createAssetTests(network: Network) {
         const addresses = await provider.getAssetAddresses(data.assetId);
         expect(addresses.length).toBeGreaterThan(0);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
           console.warn(`Test asset not found on ${network}, skipping test`);
           return;
         }
@@ -72,7 +90,12 @@ function createAssetTests(network: Network) {
         expect(history.length).toBeGreaterThan(0);
         expect(history[0].amount).toBeGreaterThan(0n);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
           console.warn(`Test asset not found on ${network}, skipping test`);
           return;
         }
@@ -83,4 +106,6 @@ function createAssetTests(network: Network) {
   });
 }
 
-Object.keys(testData).forEach((network) => createAssetTests(network as Network)); 
+Object.keys(testData).forEach((network) =>
+  createAssetTests(network as Network)
+);

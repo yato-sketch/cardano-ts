@@ -9,9 +9,9 @@ const getAddressUtxos = async (
   limit: LimitFunction
 ): Promise<UTxO[]> =>
   await Promise.all(
-    (
-      await queryUtxos(blockfrost, address, limit)
-    ).map((utxo) => toUtxo(utxo, blockfrost, limit))
+    (await queryUtxos(blockfrost, address, limit)).map((utxo) =>
+      toUtxo(utxo, blockfrost, limit)
+    )
   );
 
 const getTransactionUtxos = async (

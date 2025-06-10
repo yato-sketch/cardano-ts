@@ -9,11 +9,12 @@ const BLOCKFROST_PREVIEW_PROJECT_ID = process.env.BLOCKFROST_PREVIEW_PROJECT_ID;
 
 function createPoolTests(network: Network) {
   const data = testData[network];
-  const projectId = network === "mainnet" 
-    ? BLOCKFROST_PROJECT_ID 
-    : network === "preprod" 
-      ? BLOCKFROST_PREPROD_PROJECT_ID 
-      : BLOCKFROST_PREVIEW_PROJECT_ID;
+  const projectId =
+    network === "mainnet"
+      ? BLOCKFROST_PROJECT_ID
+      : network === "preprod"
+        ? BLOCKFROST_PREPROD_PROJECT_ID
+        : BLOCKFROST_PREVIEW_PROJECT_ID;
 
   if (!projectId) {
     console.warn(`Skipping ${network} tests: Missing project ID`);
@@ -29,12 +30,22 @@ function createPoolTests(network: Network) {
         expect(pool).toBeDefined();
         expect(pool.pool_id).toBe(data.poolId);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
           console.warn(`Test pool not found on ${network}, skipping test`);
           return;
         }
 
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 400) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 400
+        ) {
           console.warn(`Invalid pool ID format on ${network}, skipping test`);
           return;
         }
@@ -48,12 +59,24 @@ function createPoolTests(network: Network) {
         const metadata = await provider.getPoolMetadata(data.poolId);
         expect(metadata).toBeDefined();
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
-          console.warn(`Test pool metadata not found on ${network}, skipping test`);
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
+          console.warn(
+            `Test pool metadata not found on ${network}, skipping test`
+          );
           return;
         }
 
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 400) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 400
+        ) {
           console.warn(`Invalid pool ID format on ${network}, skipping test`);
           return;
         }
@@ -67,12 +90,24 @@ function createPoolTests(network: Network) {
         const history = await provider.getPoolHistory(data.poolId);
         expect(Array.isArray(history)).toBe(true);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
-          console.warn(`Test pool history not found on ${network}, skipping test`);
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
+          console.warn(
+            `Test pool history not found on ${network}, skipping test`
+          );
           return;
         }
 
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 400) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 400
+        ) {
           console.warn(`Invalid pool ID format on ${network}, skipping test`);
           return;
         }
@@ -86,12 +121,24 @@ function createPoolTests(network: Network) {
         const delegators = await provider.getPoolDelegators(data.poolId);
         expect(Array.isArray(delegators)).toBe(true);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
-          console.warn(`Test pool delegators not found on ${network}, skipping test`);
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
+          console.warn(
+            `Test pool delegators not found on ${network}, skipping test`
+          );
           return;
         }
 
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 400) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 400
+        ) {
           console.warn(`Invalid pool ID format on ${network}, skipping test`);
           return;
         }
@@ -102,4 +149,4 @@ function createPoolTests(network: Network) {
   });
 }
 
-Object.keys(testData).forEach((network) => createPoolTests(network as Network)); 
+Object.keys(testData).forEach((network) => createPoolTests(network as Network));

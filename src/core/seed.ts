@@ -100,4 +100,4 @@ export class Seed {
   getPrivateKey(derivative: number = 0, index: number = 0): string {
     return getPrivateKeyFromSeed(this.phrase, derivative, index);
   }
-} 
+}

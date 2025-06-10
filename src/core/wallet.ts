@@ -100,7 +100,10 @@ export class Wallet {
    * @param assetId The asset ID to get history for
    * @param limit The maximum number of entries to return
    */
-  async getAssetHistory(assetId: string, limit: number = 10): Promise<TokenHistoryEntry[]> {
+  async getAssetHistory(
+    assetId: string,
+    limit: number = 10
+  ): Promise<TokenHistoryEntry[]> {
     return this.provider.getTokenHistory(assetId, limit);
   }
-} 
+}

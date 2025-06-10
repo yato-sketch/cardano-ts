@@ -1,6 +1,13 @@
 import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
 import { invariant } from "../../utils/invariant";
-import { Network, Provider, UTxO, TokenHistoryEntry, MetadataEntry, Asset } from "../../types";
+import {
+  Network,
+  Provider,
+  UTxO,
+  TokenHistoryEntry,
+  MetadataEntry,
+  Asset,
+} from "../../types";
 
 /**
  * Blockfrost provider implementation for interacting with the Cardano blockchain
@@ -17,10 +24,15 @@ export class Blockfrost implements Provider {
   constructor(projectId: string, network: Network) {
     // Validate project ID format
     invariant(projectId.length > 0, "Project ID is required");
-    
+
     // Map our network to Blockfrost's network
-    const blockfrostNetwork = network === "mainnet" ? "mainnet" : network === "preprod" ? "preprod" : "preview";
-    
+    const blockfrostNetwork =
+      network === "mainnet"
+        ? "mainnet"
+        : network === "preprod"
+          ? "preprod"
+          : "preview";
+
     this.api = new BlockFrostAPI({
       projectId,
       network: blockfrostNetwork,
@@ -118,8 +130,13 @@ export class Blockfrost implements Provider {
    * @param limit - The maximum number of history entries to return
    * @returns Promise resolving to an array of history entries
    */
-  async getTokenHistory(token: string, limit: number): Promise<TokenHistoryEntry[]> {
-    const history = await this.api.assetsHistory(token, { count: Math.min(limit, 100) });
+  async getTokenHistory(
+    token: string,
+    limit: number
+  ): Promise<TokenHistoryEntry[]> {
+    const history = await this.api.assetsHistory(token, {
+      count: Math.min(limit, 100),
+    });
 
     return history.map((tx) => ({
       txHash: tx.tx_hash,
@@ -136,11 +153,11 @@ export class Blockfrost implements Provider {
   async getConfirmations(txHash: string): Promise<number> {
     const tx = await this.api.txs(txHash);
     invariant(tx, "Transaction not found");
-    
+
     const latestBlock = await this.api.blocksLatest();
     invariant(latestBlock, "Latest block not found");
     invariant(latestBlock.height !== null, "Latest block height is null");
-    
+
     return latestBlock.height - tx.block_height + 1;
   }
 
@@ -153,9 +170,10 @@ export class Blockfrost implements Provider {
     const metadata = await this.api.txsMetadata(txHash);
     return metadata.map((entry) => ({
       label: entry.label,
-      value: typeof entry.json_metadata === "string" 
-        ? JSON.parse(entry.json_metadata) 
-        : entry.json_metadata,
+      value:
+        typeof entry.json_metadata === "string"
+          ? JSON.parse(entry.json_metadata)
+          : entry.json_metadata,
     }));
   }
 
@@ -183,7 +201,7 @@ export class Blockfrost implements Provider {
    */
   async getBlockTransactions(hash: string): Promise<string[]> {
     const txs = await this.api.blocksTxs(hash);
-    return txs.map(tx => (tx as unknown as { tx_hash: string }).tx_hash);
+    return txs.map((tx) => (tx as unknown as { tx_hash: string }).tx_hash);
   }
 
   /**
@@ -193,7 +211,9 @@ export class Blockfrost implements Provider {
    */
   async getPool(poolId: string) {
     // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    const formattedPoolId = poolId.startsWith("pool1")
+      ? poolId
+      : `pool1${poolId}`;
     return this.api.poolsById(formattedPoolId);
   }
 
@@ -204,7 +224,9 @@ export class Blockfrost implements Provider {
    */
   async getPoolMetadata(poolId: string) {
     // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    const formattedPoolId = poolId.startsWith("pool1")
+      ? poolId
+      : `pool1${poolId}`;
     return this.api.poolMetadata(formattedPoolId);
   }
 
@@ -215,7 +237,9 @@ export class Blockfrost implements Provider {
    */
   async getPoolHistory(poolId: string) {
     // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    const formattedPoolId = poolId.startsWith("pool1")
+      ? poolId
+      : `pool1${poolId}`;
     return this.api.poolsByIdHistory(formattedPoolId);
   }
 
@@ -226,7 +250,9 @@ export class Blockfrost implements Provider {
    */
   async getPoolDelegators(poolId: string) {
     // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    const formattedPoolId = poolId.startsWith("pool1")
+      ? poolId
+      : `pool1${poolId}`;
     return this.api.poolsByIdDelegators(formattedPoolId);
   }
 
@@ -264,4 +290,3 @@ export class Blockfrost implements Provider {
     return this.api.network();
   }
 }
-

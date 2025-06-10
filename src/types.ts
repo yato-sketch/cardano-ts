@@ -87,64 +87,64 @@ export interface OutRef {
 export interface Provider {
   /** The network this provider is connected to */
   network: Network;
-  
+
   /** Gets UTXOs for an address */
   getUtxos(address: string): Promise<UTxO[]>;
-  
+
   /** Gets all addresses associated with a stake key */
   getStakedAddresses(stakeAddress: string): Promise<string[]>;
-  
+
   /** Finds the address that owns a token */
   findToken(assetId: string): Promise<string>;
-  
+
   /** Finds all tokens for a policy */
   findAllTokens(policyId: string): Promise<Asset[]>;
-  
+
   /** Gets UTXOs for a transaction */
   getTransactionUtxos(txHash: string): Promise<UTxO[]>;
-  
+
   /** Gets addresses that own an asset */
   getAssetAddresses(assetId: string): Promise<string[]>;
-  
+
   /** Gets the history of a token */
   getTokenHistory(assetId: string, limit: number): Promise<TokenHistoryEntry[]>;
-  
+
   /** Gets the number of confirmations for a transaction */
   getConfirmations(txHash: string): Promise<number>;
-  
+
   /** Gets metadata for a transaction */
   getMetadata(txHash: string): Promise<MetadataEntry[]>;
-  
+
   /** Gets block information */
   getBlock(hash: string): Promise<unknown>;
-  
+
   /** Gets the latest block */
   getLatestBlock(): Promise<unknown>;
-  
+
   /** Gets block transactions */
   getBlockTransactions(hash: string): Promise<string[]>;
-  
+
   /** Gets pool information */
   getPool(poolId: string): Promise<unknown>;
-  
+
   /** Gets pool metadata */
   getPoolMetadata(poolId: string): Promise<unknown>;
-  
+
   /** Gets pool history */
   getPoolHistory(poolId: string): Promise<unknown>;
-  
+
   /** Gets pool delegators */
   getPoolDelegators(poolId: string): Promise<unknown>;
-  
+
   /** Gets epoch information */
   getEpoch(number: number): Promise<unknown>;
-  
+
   /** Gets the latest epoch */
   getLatestEpoch(): Promise<unknown>;
-  
+
   /** Gets epoch parameters */
   getEpochParameters(number: number): Promise<unknown>;
-  
+
   /** Gets network information */
   getNetworkInfo(): Promise<unknown>;
 }

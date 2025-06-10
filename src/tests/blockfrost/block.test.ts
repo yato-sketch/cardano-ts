@@ -9,11 +9,12 @@ const BLOCKFROST_PREVIEW_PROJECT_ID = process.env.BLOCKFROST_PREVIEW_PROJECT_ID;
 
 function createBlockTests(network: Network) {
   const data = testData[network];
-  const projectId = network === "mainnet" 
-    ? BLOCKFROST_PROJECT_ID 
-    : network === "preprod" 
-      ? BLOCKFROST_PREPROD_PROJECT_ID 
-      : BLOCKFROST_PREVIEW_PROJECT_ID;
+  const projectId =
+    network === "mainnet"
+      ? BLOCKFROST_PROJECT_ID
+      : network === "preprod"
+        ? BLOCKFROST_PREPROD_PROJECT_ID
+        : BLOCKFROST_PREVIEW_PROJECT_ID;
 
   if (!projectId) {
     console.warn(`Skipping ${network} tests: Missing project ID`);
@@ -39,7 +40,9 @@ function createBlockTests(network: Network) {
 
     test("getBlockTransactions returns transactions", async () => {
       const latestBlock = await provider.getLatestBlock();
-      const transactions = await provider.getBlockTransactions(latestBlock.hash);
+      const transactions = await provider.getBlockTransactions(
+        latestBlock.hash
+      );
       expect(Array.isArray(transactions)).toBe(true);
     });
 
@@ -48,7 +51,12 @@ function createBlockTests(network: Network) {
         const confirmations = await provider.getConfirmations(data.txHash);
         expect(confirmations).toBeGreaterThan(0);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
           console.warn(`Transaction not found on ${network}, skipping test`);
           return;
         }
@@ -62,8 +70,15 @@ function createBlockTests(network: Network) {
         const metadata = await provider.getMetadata(data.txHash);
         expect(Array.isArray(metadata)).toBe(true);
       } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'status_code' in error && error.status_code === 404) {
-          console.warn(`Transaction metadata not found on ${network}, skipping test`);
+        if (
+          error &&
+          typeof error === "object" &&
+          "status_code" in error &&
+          error.status_code === 404
+        ) {
+          console.warn(
+            `Transaction metadata not found on ${network}, skipping test`
+          );
           return;
         }
 
@@ -73,4 +88,6 @@ function createBlockTests(network: Network) {
   });
 }
 
-Object.keys(testData).forEach((network) => createBlockTests(network as Network)); 
+Object.keys(testData).forEach((network) =>
+  createBlockTests(network as Network)
+);

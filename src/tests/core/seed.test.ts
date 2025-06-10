@@ -2,8 +2,10 @@ import { test, expect, describe } from "vitest";
 import { Seed } from "../../core/seed";
 
 describe("Seed Tests", () => {
-  const testPhrase = "neck trend supply announce because claw fiscal chimney initial popular flock congress drip mobile gun caution enjoy rely loud thing cruel devote demise garlic";
-  const differentPhrase = "exit brisk private front neither gravity clay apple oxygen core royal sport voyage index tide feature public abuse suggest fog foot cabbage exact proud";
+  const testPhrase =
+    "neck trend supply announce because claw fiscal chimney initial popular flock congress drip mobile gun caution enjoy rely loud thing cruel devote demise garlic";
+  const differentPhrase =
+    "exit brisk private front neither gravity clay apple oxygen core royal sport voyage index tide feature public abuse suggest fog foot cabbage exact proud";
 
   test("creates seed with mainnet", () => {
     const seed = new Seed(testPhrase, "mainnet");
@@ -20,21 +22,21 @@ describe("Seed Tests", () => {
   test("generates same address for same phrase and network", () => {
     const seed1 = new Seed(testPhrase, "mainnet");
     const seed2 = new Seed(testPhrase, "mainnet");
-    
+
     expect(seed1.getAddress()).toBe(seed2.getAddress());
   });
 
   test("generates different addresses for different networks", () => {
     const seed1 = new Seed(testPhrase, "mainnet");
     const seed2 = new Seed(testPhrase, "preview");
-    
+
     expect(seed1.getAddress()).not.toBe(seed2.getAddress());
   });
 
   test("generates different addresses for different phrases", () => {
     const seed1 = new Seed(testPhrase, "mainnet");
     const seed2 = new Seed(differentPhrase, "mainnet");
-    
+
     expect(seed1.getAddress()).not.toBe(seed2.getAddress());
   });
 
@@ -48,7 +50,7 @@ describe("Seed Tests", () => {
     const seed = new Seed(testPhrase, "mainnet");
     const privateKey1 = seed.getPrivateKey(0);
     const privateKey2 = seed.getPrivateKey(1);
-    
+
     expect(privateKey1).not.toBe(privateKey2);
   });
 
@@ -56,7 +58,7 @@ describe("Seed Tests", () => {
     const seed = new Seed(testPhrase, "mainnet");
     const privateKey1 = seed.getPrivateKey(0, 0);
     const privateKey2 = seed.getPrivateKey(0, 1);
-    
+
     expect(privateKey1).not.toBe(privateKey2);
   });
 
@@ -67,4 +69,4 @@ describe("Seed Tests", () => {
   test("throws error for empty phrase", () => {
     expect(() => new Seed("", "mainnet")).toThrow();
   });
-}); 
+});

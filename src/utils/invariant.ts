@@ -23,4 +23,4 @@ export const invariant: (
   // 2. message not provided: prefix
   const value: string = provided ? `${prefix}: ${provided}` : prefix;
   throw new Error(value);
-}; 
+};
