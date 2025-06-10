@@ -1,21 +1,20 @@
 import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
 import { invariant } from "../../utils/invariant";
 import { Network, Provider, UTxO, TokenHistoryEntry, MetadataEntry, Asset } from "../../types";
-import { BlockfrostConfig, BlockfrostError } from "./types";
-import { fetchWithFallback } from "./utils";
 
 /**
  * Blockfrost provider implementation for interacting with the Cardano blockchain
  */
 export class Blockfrost implements Provider {
-  private api: BlockFrostAPI;
+  private readonly api: BlockFrostAPI;
+  public readonly network: Network;
 
   /**
    * Creates a new Blockfrost provider
    * @param projectId - The Blockfrost project ID
    * @param network - The network to connect to (default: preview)
    */
-  constructor(projectId: string, public readonly network: Network = "preview") {
+  constructor(projectId: string, network: Network) {
     // Validate project ID format
     invariant(projectId.length > 0, "Project ID is required");
     
@@ -26,6 +25,7 @@ export class Blockfrost implements Provider {
       projectId,
       network: blockfrostNetwork,
     });
+    this.network = network;
   }
 
   /**

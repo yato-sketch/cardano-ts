@@ -1,7 +1,3 @@
-type OutRef = { txHash: string; outputIndex: number };
-
-export { OutRef };
-
 /**
  * Supported Cardano networks
  */
@@ -45,6 +41,8 @@ export interface UTxO {
   txHash: string;
   /** The output index */
   index: number;
+  /** The address */
+  address: string;
   /** The amount of lovelace */
   amount: bigint;
   /** The assets in this UTXO */
@@ -71,6 +69,16 @@ export interface MetadataEntry {
   label: string;
   /** The metadata content */
   value: unknown;
+}
+
+/**
+ * Represents a transaction output reference
+ */
+export interface OutRef {
+  /** The transaction hash */
+  txHash: string;
+  /** The output index */
+  outputIndex: number;
 }
 
 /**
@@ -106,4 +114,37 @@ export interface Provider {
   
   /** Gets metadata for a transaction */
   getMetadata(txHash: string): Promise<MetadataEntry[]>;
+  
+  /** Gets block information */
+  getBlock(hash: string): Promise<unknown>;
+  
+  /** Gets the latest block */
+  getLatestBlock(): Promise<unknown>;
+  
+  /** Gets block transactions */
+  getBlockTransactions(hash: string): Promise<string[]>;
+  
+  /** Gets pool information */
+  getPool(poolId: string): Promise<unknown>;
+  
+  /** Gets pool metadata */
+  getPoolMetadata(poolId: string): Promise<unknown>;
+  
+  /** Gets pool history */
+  getPoolHistory(poolId: string): Promise<unknown>;
+  
+  /** Gets pool delegators */
+  getPoolDelegators(poolId: string): Promise<unknown>;
+  
+  /** Gets epoch information */
+  getEpoch(number: number): Promise<unknown>;
+  
+  /** Gets the latest epoch */
+  getLatestEpoch(): Promise<unknown>;
+  
+  /** Gets epoch parameters */
+  getEpochParameters(number: number): Promise<unknown>;
+  
+  /** Gets network information */
+  getNetworkInfo(): Promise<unknown>;
 }
