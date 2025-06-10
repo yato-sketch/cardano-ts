@@ -1,124 +1,267 @@
 import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
-import limit, { LimitFunction } from "p-limit";
-import invariant from "../../invariant.js";
-import Provider from "../provider.js";
-import paginate from "./paginate.js";
-import * as tokens from "./tokens.js";
-import { fetchWithFallback } from "./utils.js";
-import { getAddressUtxos, getTransactionUtxos } from "./utxos.js";
+import { invariant } from "../../utils/invariant";
+import { Network, Provider, UTxO, TokenHistoryEntry, MetadataEntry, Asset } from "../../types";
+import { BlockfrostConfig, BlockfrostError } from "./types";
+import { fetchWithFallback } from "./utils";
 
-class Blockfrost implements Provider {
-  readonly network: "mainnet" | "preprod" | "preview";
-  private blockfrost: BlockFrostAPI;
-  private limit: LimitFunction;
+/**
+ * Blockfrost provider implementation for interacting with the Cardano blockchain
+ */
+export class Blockfrost implements Provider {
+  private api: BlockFrostAPI;
 
-  constructor(projectId: string, private parallel: number = 20) {
-    const network = projectId.substring(0, 7);
-    invariant(
-      network == "mainnet" || network == "preprod" || network == "preview",
-      "Unknown network"
-    );
-    this.network = network;
-    this.blockfrost = new BlockFrostAPI({ projectId });
-    this.limit = limit(parallel);
+  /**
+   * Creates a new Blockfrost provider
+   * @param projectId - The Blockfrost project ID
+   * @param network - The network to connect to (default: preview)
+   */
+  constructor(projectId: string, public readonly network: Network = "preview") {
+    // Validate project ID format
+    invariant(projectId.length > 0, "Project ID is required");
+    
+    // Map our network to Blockfrost's network
+    const blockfrostNetwork = network === "mainnet" ? "mainnet" : network === "preprod" ? "preprod" : "preview";
+    
+    this.api = new BlockFrostAPI({
+      projectId,
+      network: blockfrostNetwork,
+    });
   }
 
-  findAllTokens(policyId: string): Promise<string[]> {
-    // Policies typically don't have many tokens, so don't
-    // load multiple pages since that'll only slow down the
-    // results
-    return tokens.findAll(this.blockfrost, policyId, this.limit, 1);
+  /**
+   * Gets UTXOs for an address
+   * @param address - The address to get UTXOs for
+   * @returns Promise resolving to an array of UTXOs
+   */
+  async getUtxos(address: string): Promise<UTxO[]> {
+    const utxos = await this.api.addressesUtxos(address, { count: 100 });
+    return utxos.map((utxo) => ({
+      txHash: utxo.tx_hash,
+      index: utxo.output_index,
+      address: utxo.address,
+      amount: BigInt(utxo.amount[0].quantity),
+      assets: utxo.amount.slice(1).map((asset) => ({
+        assetId: asset.unit,
+        amount: BigInt(asset.quantity),
+      })),
+    }));
   }
 
-  async findTokensOf(policyId: string): Promise<string[]> {
-    return (
-      await tokens.findOfPolicy(this.blockfrost, policyId, this.limit, 1)
-    ).map(({ asset }) => asset);
+  /**
+   * Gets all addresses associated with a stake key
+   * @param stakeKey - The stake key to get addresses for
+   * @returns Promise resolving to an array of addresses
+   */
+  async getStakedAddresses(stakeKey: string): Promise<string[]> {
+    const addresses = await this.api.accountsAddresses(stakeKey);
+    return addresses.map((addr) => addr.address);
   }
 
-  async findToken(tokenId: string): Promise<string> {
-    const addresses = await tokens.find(this.blockfrost, tokenId, this.limit);
-    invariant(addresses.length > 0, "Token not found");
-    invariant(
-      addresses.length == 1 && parseInt(addresses[0].quantity) == 1,
-      "There's more than one token"
-    );
+  /**
+   * Finds the address that owns a token
+   * @param token - The token ID to find
+   * @returns Promise resolving to the address that owns the token
+   */
+  async findToken(token: string): Promise<string> {
+    const asset = await this.api.assetsById(token);
+    invariant(asset, "Token not found");
 
-    return addresses[0].address;
+    const tx = await this.api.txsUtxos(asset.initial_mint_tx_hash);
+    return tx.outputs[0].address;
   }
 
-  getTransactionUtxos(txHash: string) {
-    return getTransactionUtxos(this.blockfrost, txHash, this.limit);
+  /**
+   * Finds all tokens for a policy
+   * @param policy - The policy ID to find tokens for
+   * @returns Promise resolving to an array of token IDs
+   */
+  async findAllTokens(policy: string): Promise<Asset[]> {
+    const assets = await this.api.assetsPolicyById(policy, { count: 100 });
+    return assets.map((asset) => ({
+      assetId: asset.asset,
+      amount: BigInt(asset.quantity),
+    }));
   }
 
-  getUtxos(address: string) {
-    return getAddressUtxos(this.blockfrost, address, this.limit);
+  /**
+   * Gets UTXOs for a transaction
+   * @param txHash - The transaction hash to get UTXOs for
+   * @returns Promise resolving to an array of UTXOs
+   */
+  async getTransactionUtxos(txHash: string): Promise<UTxO[]> {
+    const tx = await this.api.txsUtxos(txHash);
+    return tx.outputs.map((output) => ({
+      txHash,
+      index: output.output_index,
+      address: output.address,
+      amount: BigInt(output.amount[0].quantity),
+      assets: output.amount.slice(1).map((asset) => ({
+        assetId: asset.unit,
+        amount: BigInt(asset.quantity),
+      })),
+    }));
   }
 
-  async getHeight() {
-    const latestBlock = await fetchWithFallback(
-      () => this.blockfrost.blocksLatest(),
-      null
-    );
-    invariant(latestBlock?.height, "Latest block information not found");
-    return latestBlock.height;
+  /**
+   * Gets addresses that own an asset
+   * @param asset - The asset ID to get addresses for
+   * @returns Promise resolving to an array of addresses
+   */
+  async getAssetAddresses(asset: string): Promise<string[]> {
+    const addresses = await this.api.assetsAddresses(asset);
+    return addresses.map((addr) => addr.address);
   }
 
-  async getMetadata(tx: string) {
-    return await fetchWithFallback(() => this.blockfrost.txsMetadata(tx), []);
+  /**
+   * Gets the history of a token
+   * @param token - The token ID to get history for
+   * @param limit - The maximum number of history entries to return
+   * @returns Promise resolving to an array of history entries
+   */
+  async getTokenHistory(token: string, limit: number): Promise<TokenHistoryEntry[]> {
+    const history = await this.api.assetsHistory(token, { count: Math.min(limit, 100) });
+
+    return history.map((tx) => ({
+      txHash: tx.tx_hash,
+      timestamp: Date.now(), // Blockfrost API doesn't provide block_time in history
+      amount: BigInt(tx.amount),
+    }));
   }
 
-  async getConfirmations(txHash: string, height: number = 0) {
-    const tx = await fetchWithFallback(() => this.blockfrost.txs(txHash), null);
-    invariant(tx, `Transaction with hash ${txHash} not found`);
-
-    if (!height) height = await this.getHeight();
-    return height - tx.block_height + 1;
+  /**
+   * Gets the number of confirmations for a transaction
+   * @param txHash - The transaction hash to get confirmations for
+   * @returns Promise resolving to the number of confirmations
+   */
+  async getConfirmations(txHash: string): Promise<number> {
+    const tx = await this.api.txs(txHash);
+    invariant(tx, "Transaction not found");
+    
+    const latestBlock = await this.api.blocksLatest();
+    invariant(latestBlock, "Latest block not found");
+    invariant(latestBlock.height !== null, "Latest block height is null");
+    
+    return latestBlock.height - tx.block_height + 1;
   }
 
-  async getAssetAddresses(assetId: string, parallel?: number) {
-    return paginate(
-      (page) => this.blockfrost.assetsAddresses(assetId, { page }),
-      this.limit,
-      parallel && parallel > 0 ? parallel : this.parallel
-    );
+  /**
+   * Gets metadata for a transaction
+   * @param txHash - The transaction hash to get metadata for
+   * @returns Promise resolving to an array of metadata entries
+   */
+  async getMetadata(txHash: string): Promise<MetadataEntry[]> {
+    const metadata = await this.api.txsMetadata(txHash);
+    return metadata.map((entry) => ({
+      label: entry.label,
+      value: typeof entry.json_metadata === "string" 
+        ? JSON.parse(entry.json_metadata) 
+        : entry.json_metadata,
+    }));
   }
 
-  async getStakedAddresses(stakeKey: string) {
-    return (
-      await paginate(
-        (page) => this.blockfrost.accountsAddresses(stakeKey, { page }),
-        this.limit,
-        this.parallel
-      )
-    ).map((result) => result.address);
+  /**
+   * Gets block information
+   * @param hash - The block hash to get information for
+   * @returns Promise resolving to block information
+   */
+  async getBlock(hash: string) {
+    return this.api.blocks(hash);
   }
 
-  async getTokenHistory(tokenId: string, limit: number) {
-    const txs = [];
-    let page = 1;
+  /**
+   * Gets the latest block
+   * @returns Promise resolving to the latest block information
+   */
+  async getLatestBlock() {
+    return this.api.blocksLatest();
+  }
 
-    while (txs.length < limit) {
-      const batch = await this.limit(() =>
-        fetchWithFallback(
-          () =>
-            this.blockfrost.assetsTransactions(tokenId, {
-              page: page++,
-              order: "desc",
-            }),
-          []
-        )
-      );
+  /**
+   * Gets block transactions
+   * @param hash - The block hash to get transactions for
+   * @returns Promise resolving to an array of transaction hashes
+   */
+  async getBlockTransactions(hash: string): Promise<string[]> {
+    const txs = await this.api.blocksTxs(hash);
+    return txs.map(tx => (tx as unknown as { tx_hash: string }).tx_hash);
+  }
 
-      if (!batch.length) break;
+  /**
+   * Gets pool information
+   * @param poolId - The pool ID to get information for
+   * @returns Promise resolving to pool information
+   */
+  async getPool(poolId: string) {
+    // Convert pool ID to bech32 format if needed
+    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    return this.api.poolsById(formattedPoolId);
+  }
 
-      txs.push(...batch);
-    }
+  /**
+   * Gets pool metadata
+   * @param poolId - The pool ID to get metadata for
+   * @returns Promise resolving to pool metadata
+   */
+  async getPoolMetadata(poolId: string) {
+    // Convert pool ID to bech32 format if needed
+    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    return this.api.poolMetadata(formattedPoolId);
+  }
 
-    return txs
-      .slice(0, limit)
-      .map((tx) => ({ txHash: tx.tx_hash, outputIndex: tx.tx_index }));
+  /**
+   * Gets pool history
+   * @param poolId - The pool ID to get history for
+   * @returns Promise resolving to pool history
+   */
+  async getPoolHistory(poolId: string) {
+    // Convert pool ID to bech32 format if needed
+    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    return this.api.poolsByIdHistory(formattedPoolId);
+  }
+
+  /**
+   * Gets pool delegators
+   * @param poolId - The pool ID to get delegators for
+   * @returns Promise resolving to pool delegators
+   */
+  async getPoolDelegators(poolId: string) {
+    // Convert pool ID to bech32 format if needed
+    const formattedPoolId = poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+    return this.api.poolsByIdDelegators(formattedPoolId);
+  }
+
+  /**
+   * Gets epoch information
+   * @param number - The epoch number to get information for
+   * @returns Promise resolving to epoch information
+   */
+  async getEpoch(number: number) {
+    return this.api.epochs(number);
+  }
+
+  /**
+   * Gets the latest epoch
+   * @returns Promise resolving to the latest epoch information
+   */
+  async getLatestEpoch() {
+    return this.api.epochsLatest();
+  }
+
+  /**
+   * Gets epoch parameters
+   * @param number - The epoch number to get parameters for
+   * @returns Promise resolving to epoch parameters
+   */
+  async getEpochParameters(number: number) {
+    return this.api.epochsParameters(number);
+  }
+
+  /**
+   * Gets network information
+   * @returns Promise resolving to network information
+   */
+  async getNetworkInfo() {
+    return this.api.network();
   }
 }
 
-export default Blockfrost;

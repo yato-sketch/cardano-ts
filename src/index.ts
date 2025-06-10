@@ -1,9 +1,15 @@
-import { UTxO } from "@lucid-evolution/lucid";
-import Blockfrost from "./providers/blockfrost/blockfrost.js";
-import Provider from "./providers/provider.js";
-import Seed from "./seed.js";
-import { OutRef } from "./types.js";
-import Wallet from "./wallet.js";
+// Core exports
+export { Wallet } from './core/wallet';
+export { Seed } from './core/seed';
 
-export { Blockfrost, Seed, Wallet };
-export type { OutRef, Provider, UTxO };
+// Provider exports
+export { Blockfrost } from './providers/blockfrost';
+
+// Type exports
+export type {
+  Network,
+  Address,
+  StakeAddress,
+  UTxO,
+  Provider,
+} from './types';
