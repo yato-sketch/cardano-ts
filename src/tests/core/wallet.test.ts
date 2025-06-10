@@ -10,6 +10,11 @@ describe("Wallet Tests", () => {
   const projectId =
     process.env.BLOCKFROST_PREVIEW_PROJECT_ID || "test_project_id";
 
+  test("creates provider with default network", () => {
+    const provider = new Blockfrost(projectId);
+    expect(provider.network).toBe("preview");
+  });
+
   test("creates wallet with provider and address", () => {
     const provider = new Blockfrost(projectId, "preview");
     const wallet = new Wallet(provider, testAddress);

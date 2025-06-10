@@ -21,7 +21,7 @@ export class Blockfrost implements Provider {
    * @param projectId - The Blockfrost project ID
    * @param network - The network to connect to (default: preview)
    */
-  constructor(projectId: string, network: Network) {
+  constructor(projectId: string, network: Network = "preview") {
     // Validate project ID format
     invariant(projectId.length > 0, "Project ID is required");
 
@@ -41,22 +41,47 @@ export class Blockfrost implements Provider {
   }
 
   /**
+   * Formats a pool ID to bech32 format if needed
+   * @param poolId - The pool ID to format
+   * @returns The formatted pool ID
+   */
+  private formatPoolId(poolId: string): string {
+    return poolId.startsWith('pool1') ? poolId : `pool1${poolId}`;
+  }
+
+  /**
    * Gets UTXOs for an address
    * @param address - The address to get UTXOs for
    * @returns Promise resolving to an array of UTXOs
    */
   async getUtxos(address: string): Promise<UTxO[]> {
-    const utxos = await this.api.addressesUtxos(address, { count: 100 });
-    return utxos.map((utxo) => ({
-      txHash: utxo.tx_hash,
-      index: utxo.output_index,
-      address: utxo.address,
-      amount: BigInt(utxo.amount[0].quantity),
-      assets: utxo.amount.slice(1).map((asset) => ({
-        assetId: asset.unit,
-        amount: BigInt(asset.quantity),
-      })),
-    }));
+    const PAGE_SIZE = 100;
+    let page = 1;
+    let hasMore = true;
+    const utxos: UTxO[] = [];
+
+    while (hasMore) {
+      const pageUtxos = await this.api.addressesUtxos(address, {
+        count: PAGE_SIZE,
+        page,
+      });
+
+      utxos.push(...pageUtxos.map((utxo) => ({
+        txHash: utxo.tx_hash,
+        index: utxo.output_index,
+        address: utxo.address,
+        amount: BigInt(utxo.amount[0].quantity),
+        assets: utxo.amount.slice(1).map((asset) => ({
+          assetId: asset.unit,
+          amount: BigInt(asset.quantity),
+        })),
+      })));
+
+      hasMore = pageUtxos.length === PAGE_SIZE;
+      page++;
+    }
+
+    return utxos;
   }
 
   /**
@@ -65,8 +90,24 @@ export class Blockfrost implements Provider {
    * @returns Promise resolving to an array of addresses
    */
   async getStakedAddresses(stakeKey: string): Promise<string[]> {
-    const addresses = await this.api.accountsAddresses(stakeKey);
-    return addresses.map((addr) => addr.address);
+    const PAGE_SIZE = 100;
+    let page = 1;
+    let hasMore = true;
+    const addresses: string[] = [];
+
+    while (hasMore) {
+      const pageAddresses = await this.api.accountsAddresses(stakeKey, {
+        count: PAGE_SIZE,
+        page,
+      });
+
+      addresses.push(...pageAddresses.map((addr) => addr.address));
+
+      hasMore = pageAddresses.length === PAGE_SIZE;
+      page++;
+    }
+
+    return addresses;
   }
 
   /**
@@ -79,7 +120,13 @@ export class Blockfrost implements Provider {
     invariant(asset, "Token not found");
 
     const tx = await this.api.txsUtxos(asset.initial_mint_tx_hash);
-    return tx.outputs[0].address;
+    
+    const output = tx.outputs.find(output => 
+      output.amount.some(amount => amount.unit === token)
+    );
+    
+    invariant(output, "Token not found in mint transaction outputs");
+    return output.address;
   }
 
   /**
@@ -88,11 +135,27 @@ export class Blockfrost implements Provider {
    * @returns Promise resolving to an array of token IDs
    */
   async findAllTokens(policy: string): Promise<Asset[]> {
-    const assets = await this.api.assetsPolicyById(policy, { count: 100 });
-    return assets.map((asset) => ({
-      assetId: asset.asset,
-      amount: BigInt(asset.quantity),
-    }));
+    const PAGE_SIZE = 100;
+    let page = 1;
+    let hasMore = true;
+    const assets: Asset[] = [];
+
+    while (hasMore) {
+      const pageAssets = await this.api.assetsPolicyById(policy, {
+        count: PAGE_SIZE,
+        page,
+      });
+
+      assets.push(...pageAssets.map((asset) => ({
+        assetId: asset.asset,
+        amount: BigInt(asset.quantity),
+      })));
+
+      hasMore = pageAssets.length === PAGE_SIZE;
+      page++;
+    }
+
+    return assets;
   }
 
   /**
@@ -130,19 +193,23 @@ export class Blockfrost implements Provider {
    * @param limit - The maximum number of history entries to return
    * @returns Promise resolving to an array of history entries
    */
-  async getTokenHistory(
-    token: string,
-    limit: number
-  ): Promise<TokenHistoryEntry[]> {
-    const history = await this.api.assetsHistory(token, {
-      count: Math.min(limit, 100),
-    });
+  async getTokenHistory(token: string, limit: number): Promise<TokenHistoryEntry[]> {
+    const history = await this.api.assetsHistory(token, { count: Math.min(limit, 100) });
+    const entries: TokenHistoryEntry[] = [];
 
-    return history.map((tx) => ({
-      txHash: tx.tx_hash,
-      timestamp: Date.now(), // Blockfrost API doesn't provide block_time in history
-      amount: BigInt(tx.amount),
-    }));
+    for (const tx of history) {
+      const txDetails = await this.api.txs(tx.tx_hash);
+
+      if (txDetails) {
+        entries.push({
+          txHash: tx.tx_hash,
+          timestamp: txDetails.block_time * 1000, // Convert block_time to milliseconds
+          amount: BigInt(tx.amount),
+        });
+      }
+    }
+
+    return entries;
   }
 
   /**
@@ -210,11 +277,7 @@ export class Blockfrost implements Provider {
    * @returns Promise resolving to pool information
    */
   async getPool(poolId: string) {
-    // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith("pool1")
-      ? poolId
-      : `pool1${poolId}`;
-    return this.api.poolsById(formattedPoolId);
+    return this.api.poolsById(this.formatPoolId(poolId));
   }
 
   /**
@@ -223,11 +286,7 @@ export class Blockfrost implements Provider {
    * @returns Promise resolving to pool metadata
    */
   async getPoolMetadata(poolId: string) {
-    // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith("pool1")
-      ? poolId
-      : `pool1${poolId}`;
-    return this.api.poolMetadata(formattedPoolId);
+    return this.api.poolMetadata(this.formatPoolId(poolId));
   }
 
   /**
@@ -236,11 +295,7 @@ export class Blockfrost implements Provider {
    * @returns Promise resolving to pool history
    */
   async getPoolHistory(poolId: string) {
-    // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith("pool1")
-      ? poolId
-      : `pool1${poolId}`;
-    return this.api.poolsByIdHistory(formattedPoolId);
+    return this.api.poolsByIdHistory(this.formatPoolId(poolId));
   }
 
   /**
@@ -249,11 +304,7 @@ export class Blockfrost implements Provider {
    * @returns Promise resolving to pool delegators
    */
   async getPoolDelegators(poolId: string) {
-    // Convert pool ID to bech32 format if needed
-    const formattedPoolId = poolId.startsWith("pool1")
-      ? poolId
-      : `pool1${poolId}`;
-    return this.api.poolsByIdDelegators(formattedPoolId);
+    return this.api.poolsByIdDelegators(this.formatPoolId(poolId));
   }
 
   /**
