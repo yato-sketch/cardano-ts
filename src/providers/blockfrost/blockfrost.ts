@@ -52,17 +52,17 @@ export class Blockfrost implements Provider {
   /**
    * Gets UTXOs for an address
    * @param address - The address to get UTXOs for
+   * @param page - The page number to return
+   * @param limit - The number of UTXOs to return per page
    * @returns Promise resolving to an array of UTXOs
    */
-  async getUtxos(address: string): Promise<UTxO[]> {
-    const PAGE_SIZE = 100;
-    let page = 1;
+  async getUtxos(address: string, page: number = 1, limit: number = 100): Promise<UTxO[]> {
     let hasMore = true;
     const utxos: UTxO[] = [];
 
     while (hasMore) {
       const pageUtxos = await this.api.addressesUtxos(address, {
-        count: PAGE_SIZE,
+        count: limit,
         page,
       });
 
@@ -77,7 +77,7 @@ export class Blockfrost implements Provider {
         })),
       })));
 
-      hasMore = pageUtxos.length === PAGE_SIZE;
+      hasMore = pageUtxos.length === limit;
       page++;
     }
 
@@ -87,23 +87,23 @@ export class Blockfrost implements Provider {
   /**
    * Gets all addresses associated with a stake key
    * @param stakeKey - The stake key to get addresses for
+   * @param page - The page number to return
+   * @param limit - The number of addresses to return per page
    * @returns Promise resolving to an array of addresses
    */
-  async getStakedAddresses(stakeKey: string): Promise<string[]> {
-    const PAGE_SIZE = 100;
-    let page = 1;
+  async getStakedAddresses(stakeKey: string, page: number = 1, limit: number = 100): Promise<string[]> {
     let hasMore = true;
     const addresses: string[] = [];
 
     while (hasMore) {
       const pageAddresses = await this.api.accountsAddresses(stakeKey, {
-        count: PAGE_SIZE,
+        count: limit,
         page,
       });
 
       addresses.push(...pageAddresses.map((addr) => addr.address));
 
-      hasMore = pageAddresses.length === PAGE_SIZE;
+      hasMore = pageAddresses.length === limit
       page++;
     }
 
@@ -132,17 +132,17 @@ export class Blockfrost implements Provider {
   /**
    * Finds all tokens for a policy
    * @param policy - The policy ID to find tokens for
+   * @param page - The page number to return
+   * @param limit - The number of tokens to return per page
    * @returns Promise resolving to an array of token IDs
    */
-  async findAllTokens(policy: string): Promise<Asset[]> {
-    const PAGE_SIZE = 100;
-    let page = 1;
+  async findAllTokens(policy: string, page: number = 1, limit: number = 100): Promise<Asset[]> {
     let hasMore = true;
     const assets: Asset[] = [];
 
     while (hasMore) {
       const pageAssets = await this.api.assetsPolicyById(policy, {
-        count: PAGE_SIZE,
+        count: limit,
         page,
       });
 
@@ -151,7 +151,7 @@ export class Blockfrost implements Provider {
         amount: BigInt(asset.quantity),
       })));
 
-      hasMore = pageAssets.length === PAGE_SIZE;
+      hasMore = pageAssets.length === limit;
       page++;
     }
 
@@ -191,10 +191,11 @@ export class Blockfrost implements Provider {
    * Gets the history of a token
    * @param token - The token ID to get history for
    * @param limit - The maximum number of history entries to return
+   * @param page - The page number to return
    * @returns Promise resolving to an array of history entries
    */
-  async getTokenHistory(token: string, limit: number): Promise<TokenHistoryEntry[]> {
-    const history = await this.api.assetsHistory(token, { count: Math.min(limit, 100) });
+  async getTokenHistory(token: string, limit: number, page: number = 1): Promise<TokenHistoryEntry[]> {
+    const history = await this.api.assetsHistory(token, { count: Math.min(limit, 100), page });
     const entries: TokenHistoryEntry[] = [];
 
     for (const tx of history) {
@@ -203,7 +204,7 @@ export class Blockfrost implements Provider {
       if (txDetails) {
         entries.push({
           txHash: tx.tx_hash,
-          timestamp: txDetails.block_time * 1000, // Convert block_time to milliseconds
+          timestamp: txDetails.block_time * 1000,
           amount: BigInt(tx.amount),
         });
       }
