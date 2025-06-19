@@ -1,0 +1,29 @@
+{
+  "mainnet": {
+    "projectId": "mainnet_project_id",
+    "network": "mainnet",
+    "address": "addr1v9fm7jaxuj4nxh5e50qy9z6y7n5yg2kstt6aerjgv0yfh7qrmhqff",
+    "stakeAddress": "stake1u8znz5zf65hg3nm7f2uugzlkzx04duqwn7c62h0pfw2shkg7dn5hz",
+    "assetId": "02f68378e37af4545d027d0a9fa5581ac682897a3fc1f6d8f936ed2b4154414441",
+    "poolId": "pool1z5uqdk7dzdxaae5633fqfcu2eqzy3a3rgtuvy087fdld7yws0xt",
+    "txHash": "b0a825dfdd4061aca71edae7d684cd01713535217253074b7cd4039d807a5151"
+  },
+  "preprod": {
+    "projectId": "preprod_project_id",
+    "network": "preprod",
+    "address": "addr_test1wqlcn3pks3xdptxjw9pqrqtcx6ev694sstsruw3phd57ttg0lh0zq",
+    "stakeAddress": "stake_test1up0ymlffpsmmnwhrkjaaknpd946qzedgf7zgn63vll44p7g8wa00d",
+    "assetId": "bb7f4364a3777f9cf178c545418725894dedc17f67f18de9bc8d8032466c756964202d2033303020",
+    "poolId": "pool1wn6a6f23ctq06udwhw27ravdpd6zcr7jlut3yez0wzdackz3222",
+    "txHash": "1ba09c7079fa3cdec37f834cc5b68ffadf4d31427d86c5de717ac16d2d547525"
+  },
+  "preview": {
+    "projectId": "preview_project_id",
+    "network": "preview",
+    "address": "addr_test1qrs5c09t4gmeyluma5p4pj8gy6vuz0vc3wmcrqawldtpqwyqlm5t90unu8ccfhshhcn95384cpn63vftkxdlr7fqed9qm5vgc0",
+    "stakeAddress": "stake_test1uzq0a69jh7f7ruvymctmufj6gn6uqeagky4mrxl3lysvkjsk40lhj",
+    "assetId": "065270479316f1d92e00f7f9f095ebeaac9d009c878dc35ce36d3404484f534b5974",
+    "poolId": "pool1a7h89sr6ymj9g2a9tm6e6dddghl64tp39pj78f6cah5ewgd4px0",
+    "txHash": "06b4bb14c6b9001459744c75bdbe43c185e72013911b9cd7c5e42ff70bfef00b"
+  }
+}
